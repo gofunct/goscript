@@ -2,19 +2,14 @@ package config
 
 import (
 	"fmt"
-	kitlog "github.com/go-kit/kit/log"
 	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/viper"
-	"log"
 	"os"
 )
 
 // initConfig reads in config file and ENV variables if set.
 func InitConfig(cfg string) func() {
 	return func() {
-		logger := kitlog.NewJSONLogger(kitlog.NewSyncWriter(os.Stdout))
-		logger = kitlog.With(logger, "ts", kitlog.DefaultTimestampUTC, "caller", kitlog.DefaultCaller, "user", os.Getenv("USER"))
-		log.SetOutput(kitlog.NewStdlibAdapter(logger))
 
 		if cfg != "" {
 			// Use config file from the flag.

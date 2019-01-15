@@ -36,8 +36,8 @@ var tmplDir string
 
 // replaceCmd represents the replace command
 var replaceCmd = &cobra.Command{
-	Use:   "replace",
-	Short: "A brief description of your command",
+	Use:         "replace",
+	Short:       "A brief description of your command",
 	Annotations: md,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("replace me with a walkfunc")

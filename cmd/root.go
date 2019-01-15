@@ -23,6 +23,7 @@ package cmd
 import (
 	"fmt"
 	"github.com/gofunct/chronic/config"
+	"github.com/gofunct/goscript/cmd/protoc"
 	"github.com/spf13/cobra"
 	"os"
 )
@@ -44,8 +45,7 @@ func Execute() {
 }
 
 func init() {
+	rootCmd.AddCommand(protoc.ProtocCmd)
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.chronic.yaml)")
 	cobra.OnInitialize(config.InitConfig(cfgFile))
 }
-
-type UsageFunc func(c *cobra.Command) error

@@ -3,23 +3,21 @@ syntax = "proto3";
 package script;
 
 service ScriptService {
-    rpc Docker (Arg) returns (Output) {}
-    rpc Gcloud (Arg) returns (Output) {}
-    rpc Git (Arg) returns (Output) {}
-    rpc Go (Arg) returns (Output) {}
-    rpc Kubectl (Arg) returns (Output) {}
-    rpc Protoc (Arg) returns (Output) {}
-    rpc Terraform (Arg) returns (Output) {}
+    rpc Docker (Command) returns (Output) {}
+    rpc Gcloud (Command) returns (Output) {}
+    rpc Git (Command) returns (Output) {}
+    rpc Go (Command) returns (Output) {}
+    rpc Kubectl (Command) returns (Output) {}
+    rpc Protoc (Command) returns (Output) {}
+    rpc Terraform (Command) returns (Output) {}
 }
 
-message Arg {
-    string dir = 2;
-    repeated string envs = 3;
-    repeated string args = 4;
+message Command {
+    string dir = 1;
+    repeated string args = 2;
 }
 
 message Output {
     int32 retcode = 1;
-    bytes stdout = 2;
-    bytes stderr = 3;
+    bytes out = 2;
 }
