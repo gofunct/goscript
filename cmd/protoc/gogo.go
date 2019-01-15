@@ -21,35 +21,40 @@
 package protoc
 
 import (
+	"fmt"
 	kitlog "github.com/go-kit/kit/log"
 	"github.com/pkg/errors"
+	"github.com/spf13/cobra"
 	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
+)
 
-	"github.com/spf13/cobra"
+var (
+	dir string
 )
 
 // protocCmd represents the protoc command
-var ProtocCmd = &cobra.Command{
-	Use:   "protoc",
-	Short: "A brief description of your command",
+var GoGoCmd = &cobra.Command{
+	Use:   "gogo",
+	Short: "generate protocol buffers",
 	Run: func(cmd *cobra.Command, args []string) {
-		if err := Grpc(dir); err != nil {
+		if err := GoGo(dir); err != nil {
 			log.Fatalln("failed to execute command", errors.WithStack(err))
 		}
 	},
 }
 
 func init() {
-	ProtocCmd.Flags().StringVar(&dir, "dir", "", "path to directory containing protobuf files")
+	ProtocCmd.AddCommand(GoGoCmd)
+	GoGoCmd.Flags().StringVar(&dir, "dir", "", "path to directory containing protobuf files")
 	logger := kitlog.NewJSONLogger(kitlog.NewSyncWriter(os.Stdout))
 	logger = kitlog.With(logger, "time", kitlog.DefaultTimestampUTC, "exec", kitlog.DefaultCaller, "dir", dir)
 	log.SetOutput(kitlog.NewStdlibAdapter(logger))
 }
 
-func Grpc(d string) error {
+func GoGo(d string) error {
 
 	return filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 		// skip vendor directory
@@ -60,8 +65,23 @@ func Grpc(d string) error {
 		if filepath.Ext(path) == ".proto" {
 			// args
 			args := []string{
-				"--go_out=plugins=grpc:.",
-				path,
+				"-I=.",
+				"-I=vendor/github.com/grpc-ecosystem/grpc-gateway",
+				"-I=vendor/github.com/gogo/googleapis",
+				"-I=vendor",
+				fmt.Sprintf("-I=%s", filepath.Join(os.Getenv("GOPATH"), "src")),
+				fmt.Sprintf("-I=%s", filepath.Join(os.Getenv("GOPATH"), "src", "github.com", "gogo", "protobuf", "protobuf")),
+				fmt.Sprintf("--proto_path=%s", filepath.Join(os.Getenv("GOPATH"), "src", "github.com")),
+				"--gogofaster_out=Mgoogle/protobuf/any.proto=github.com/gogo/protobuf/types," +
+					"Mgoogle/protobuf/duration.proto=github.com/gogo/protobuf/types," +
+					"Mgoogle/protobuf/struct.proto=github.com/gogo/protobuf/types," +
+					"Mgoogle/protobuf/timestamp.proto=github.com/gogo/protobuf/types," +
+					"Mgoogle/protobuf/wrappers.proto=github.com/gogo/protobuf/types," +
+					"Mgoogle/protobuf/empty.proto=github.com/gogo/protobuf/types" +
+					"Mgoogle/api/annotations.proto=github.com/gogo/googleapis/google/api" +
+					"Mgoogle/protobuf/field_mask.proto=github.com/gogo/protobuf/types" +
+					"plugins=grpc+embedded:.",
+				"gogo_" + path,
 			}
 			cmd := exec.Command("protoc", args...)
 			log.Print("starting command")

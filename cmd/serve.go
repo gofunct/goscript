@@ -22,28 +22,37 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/gofunct/goscript/cmd/protoc"
+	"github.com/gofunct/goscript/script"
+	"google.golang.org/grpc"
+	"log"
+	"net"
+
 	"github.com/spf13/cobra"
-	"os"
 )
 
 var (
-	cfgFile string
-	goPath  = os.Getenv("GOPATH")
+	port string
 )
-var rootCmd = &cobra.Command{
-	Use:   "goscript",
-	Short: "A brief description of your application",
-}
-
-func Execute() {
-	if err := rootCmd.Execute(); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-}
 
 func init() {
-	rootCmd.AddCommand(protoc.ProtocCmd)
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.chronic.yaml)")
+	rootCmd.AddCommand(serveCmd)
+	serveCmd.Flags().StringVarP(&port, "port", "p", "8080", "port  to listen on")
+}
+
+// serveCmd represents the serve command
+var serveCmd = &cobra.Command{
+	Use:   "serve",
+	Short: "A brief description of your command",
+
+	RunE: func(cmd *cobra.Command, args []string) error {
+		lis, err := net.Listen("tcp", fmt.Sprintf("localhost:%s", port))
+		if err != nil {
+			log.Fatalf("failed to listen: %v", err)
+		}
+		var opts []grpc.ServerOption
+
+		grpcServer := grpc.NewServer(opts...)
+		script.RegisterScriptServiceServer(grpcServer, script.NewScriptHandler())
+		return grpcServer.Serve(lis)
+	},
 }

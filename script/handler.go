@@ -1,6 +1,12 @@
 package script
 
-import "context"
+import (
+	"context"
+	context2 "golang.org/x/net/context"
+	"log"
+	"os"
+	"os/exec"
+)
 
 // Endpoint is the fundamental building block of servers and clients.
 // It represents a single RPC method.
@@ -24,3 +30,21 @@ func Chain(outer Middleware, others ...Middleware) Middleware {
 		return outer(next)
 	}
 }
+
+type ScriptHandler struct {}
+
+func NewScriptHandler() *ScriptHandler {
+	return &ScriptHandler{}
+}
+
+func (s *ScriptHandler) Exec(ctx context2.Context, cmd *Command) (*Output, error) {
+	e := exec.CommandContext(ctx, cmd.Name, cmd.Args...)
+	log.Print("starting command")
+	cmd.Env = os.Environ()
+	data, err := e.Output()
+	log.Println(string(data))
+	return &Output{
+		Out:                  data,
+	}, err
+}
+
