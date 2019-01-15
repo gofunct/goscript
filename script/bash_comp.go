@@ -4,11 +4,13 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/gofunct/goscript/render/bash"
+	"github.com/inconshreveable/mousetrap"
 	"github.com/spf13/pflag"
 	"os"
 	"sort"
 	"strings"
 	"io"
+	"time"
 )
 
 func writeCommands(buf *bytes.Buffer, cmd *Command) {
@@ -284,4 +286,14 @@ func MarkFlagFilename(flags *pflag.FlagSet, name string, extensions ...string) e
 // Generated bash autocompletion will call the bash function f for the flag.
 func MarkFlagCustom(flags *pflag.FlagSet, name string, f string) error {
 	return flags.SetAnnotation(name, bash.BashCompCustom, []string{f})
+}
+
+var preExecHookFn = preExecHook
+
+func preExecHook(c *Command) {
+	if bash.MousetrapHelpText != "" && mousetrap.StartedByExplorer() {
+		c.Print(bash.MousetrapHelpText)
+		time.Sleep(5 * time.Second)
+		os.Exit(1)
+	}
 }

@@ -1,29 +1,9 @@
 package script
 
 import (
-	"github.com/spf13/pflag"
+	"github.com/gofunct/goscript/utils"
 	"strings"
 )
-
-func hasNoOptDefVal(name string, fs *pflag.FlagSet) bool {
-	flag := fs.Lookup(name)
-	if flag == nil {
-		return false
-	}
-	return flag.NoOptDefVal != ""
-}
-
-func shortHasNoOptDefVal(name string, fs *pflag.FlagSet) bool {
-	if len(name) == 0 {
-		return false
-	}
-
-	flag := fs.ShorthandLookup(name[:1])
-	if flag == nil {
-		return false
-	}
-	return flag.NoOptDefVal != ""
-}
 
 func stripFlags(args []string, c *Command) []string {
 	if len(args) == 0 {
@@ -42,11 +22,11 @@ Loop:
 		case s == "--":
 			// "--" terminates the flags
 			break Loop
-		case strings.HasPrefix(s, "--") && !strings.Contains(s, "=") && !hasNoOptDefVal(s[2:], flags):
+		case strings.HasPrefix(s, "--") && !strings.Contains(s, "=") && !utils.HasNoOptDefVal(s[2:], flags):
 			// If '--flag arg' then
 			// delete arg from args.
 			fallthrough // (do the same as below)
-		case strings.HasPrefix(s, "-") && !strings.Contains(s, "=") && len(s) == 2 && !shortHasNoOptDefVal(s[1:], flags):
+		case strings.HasPrefix(s, "-") && !strings.Contains(s, "=") && len(s) == 2 && !utils.ShortHasNoOptDefVal(s[1:], flags):
 			// If '-f arg' then
 			// delete 'arg' from args or break the loop if len(args) <= 1.
 			if len(args) <= 1 {
@@ -62,3 +42,4 @@ Loop:
 
 	return commands
 }
+
