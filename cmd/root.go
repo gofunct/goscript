@@ -27,8 +27,10 @@ import (
 	"os"
 )
 
-var cfgFile string
-
+var (
+	cfgFile string
+	goPath  = os.Getenv("GOPATH")
+)
 var rootCmd = &cobra.Command{
 	Use:   "goscript",
 	Short: "A brief description of your application",
@@ -45,3 +47,5 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.chronic.yaml)")
 	cobra.OnInitialize(config.InitConfig(cfgFile))
 }
+
+type UsageFunc func(c *cobra.Command) error

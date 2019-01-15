@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package script;
+
+service ScriptService {
+    rpc Docker (Arg) returns (Output) {}
+    rpc Gcloud (Arg) returns (Output) {}
+    rpc Git (Arg) returns (Output) {}
+    rpc Go (Arg) returns (Output) {}
+    rpc Kubectl (Arg) returns (Output) {}
+    rpc Protoc (Arg) returns (Output) {}
+    rpc Terraform (Arg) returns (Output) {}
+}
+
+message Arg {
+    string dir = 2;
+    repeated string envs = 3;
+    repeated string args = 4;
+}
+
+message Output {
+    int32 retcode = 1;
+    bytes stdout = 2;
+    bytes stderr = 3;
+}

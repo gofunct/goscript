@@ -4,6 +4,7 @@ require (
 	github.com/go-kit/kit v0.8.0
 	github.com/gofunct/chronic v0.0.0-20190114225718-df8bd862d6db
 	github.com/gofunct/iio v0.0.0-20190113232743-5cdf2347895d
+	github.com/gogo/protobuf v1.2.0
 	github.com/google/wire v0.2.0
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/jtolds/gls v4.2.1+incompatible // indirect

@@ -16,6 +16,8 @@ github.com/gofunct/chronic v0.0.0-20190114225718-df8bd862d6db h1:Srb844N8sEHpcqN
 github.com/gofunct/chronic v0.0.0-20190114225718-df8bd862d6db/go.mod h1:PhUli3dB1LGAKrnkOGxJhs24/7k9uEhBLhymt3kw0H4=
 github.com/gofunct/iio v0.0.0-20190113232743-5cdf2347895d h1:QjZ75gY4c71mi3xxeZyln7TKyuVlZC7kyBvyfsa8XlM=
 github.com/gofunct/iio v0.0.0-20190113232743-5cdf2347895d/go.mod h1:saLwz6czFr8y7bqJGoyUlTdfNGizUKKiLDVzQGRUUZ8=
+github.com/gogo/protobuf v1.2.0 h1:xU6/SpYbvkNYiptHJYEDRseDLvYE7wSqhYYNy0QSUzI=
+github.com/gogo/protobuf v1.2.0/go.mod h1:r8qH/GZQm5c6nD/R0oafs1akxWv10x8SbQlK7atdtwQ=
 github.com/google/go-cmp v0.2.0/go.mod h1:oXzfMopK8JAjlY9xF4vHSVASa0yLyX7SntLO5aqRK0M=
 github.com/google/wire v0.2.0 h1:l8O+yxT6Kx49nR2KzotgPOQpHFcIvpDY0rGzlCZ1wIE=
 github.com/google/wire v0.2.0/go.mod h1:ptBl5bWD3nzmJHVNwYHV3v4wdtKzBMlU2YbtKQCG9GI=

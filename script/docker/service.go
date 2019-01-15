@@ -116,3 +116,75 @@ func (d *Docker) exec(c *script.Command, cmd *exec.Cmd) (out []byte, err error) 
 
 	return
 }
+
+func (d *Docker) Run(ctx context.Context, opts ...script.Option) error {
+	var wg sync.WaitGroup
+
+	c := script.BuildCommand("docker", opts)
+
+	cmd := exec.CommandContext(ctx, c.Name, c.Args...)
+	cmd.Dir = c.Dir
+	cmd.Env = c.Env
+
+	sigCh := make(chan os.Signal, 1)
+	signal.Notify(sigCh)
+	wg.Add(1)
+
+	go func() {
+		defer wg.Done()
+		defer recover()
+		for sig := range sigCh {
+			log.Println("signal received--*", sig)
+			if cmd.ProcessState == nil || cmd.ProcessState.Exited() {
+				break
+			}
+			cmd.Process.Signal(sig)
+		}
+	}()
+
+	err := d.run(c, cmd)
+	if err != nil {
+		err = errors.WithStack(err)
+	}
+
+	signal.Reset()
+	close(sigCh)
+
+	wg.Wait()
+	return nil
+}
+
+func (d *Docker) run(c *script.Command, cmd *exec.Cmd) error {
+	var (
+		buf bytes.Buffer
+		wg  sync.WaitGroup
+	)
+
+	closers := make([]func() error, 0, 2)
+
+	outReader, err := cmd.StdoutPipe()
+	if err != nil {
+		return errors.WithStack(err)
+
+	}
+	errReader, err := cmd.StderrPipe()
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	wg.Add(2)
+	go func() {
+		defer wg.Done()
+		io.Copy(d.Out(), io.TeeReader(outReader, &buf))
+	}()
+	closers = append(closers, outReader.Close)
+	go func() {
+		defer wg.Done()
+		io.Copy(d.Err(), io.TeeReader(errReader, &buf))
+	}()
+	closers = append(closers, errReader.Close)
+
+	cmd.Stdin = d.In()
+
+	return cmd.Run()
+}

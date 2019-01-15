@@ -2,6 +2,8 @@ package script
 
 import (
 	"context"
+	"encoding/json"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -10,6 +12,7 @@ import (
 // Executor is an interface for executing external commands.
 type Executor interface {
 	Exec(ctx context.Context, opts ...Option) ([]byte, error)
+	Run(ctx context.Context, opts ...Option) error
 }
 
 // Command contains parameters for executing external commands.
@@ -73,4 +76,14 @@ func WithIOConnected() Option {
 	return func(c *Command) {
 		c.IOConnected = true
 	}
+}
+
+func Handle(executor Executor, opts ...Option) Handler {
+	return func(ctx context.Context, i interface{}) (interface{}, error) {
+		return executor.Exec(ctx, opts...)
+	}
+}
+
+func EncodeResponse(ctx context.Context, w http.ResponseWriter, response interface{}) error {
+	return json.NewEncoder(w).Encode(response)
 }
