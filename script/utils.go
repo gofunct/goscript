@@ -5,6 +5,12 @@ import (
 	"strings"
 )
 
+// OnInitialize sets the passed functions to be run when each command's
+// Execute method is called.
+func OnInitialize(y ...func()) {
+	initializers = append(initializers, y...)
+}
+
 func stripFlags(args []string, c *Command) []string {
 	if len(args) == 0 {
 		return args
@@ -42,4 +48,3 @@ Loop:
 
 	return commands
 }
-

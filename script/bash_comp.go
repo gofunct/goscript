@@ -6,10 +6,10 @@ import (
 	"github.com/gofunct/goscript/render/bash"
 	"github.com/inconshreveable/mousetrap"
 	"github.com/spf13/pflag"
+	"io"
 	"os"
 	"sort"
 	"strings"
-	"io"
 	"time"
 )
 
