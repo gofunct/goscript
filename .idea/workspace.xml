@@ -2,6 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="3c119500-be46-46a8-9143-f2f4b9118a1c" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../common" beforeDir="false" afterPath="$PROJECT_DIR$/../common" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../demogen/.codecov.yml" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/../demogen/.dockerignore" beforeDir="false" />
@@ -29,8 +30,7 @@
       <change beforePath="$PROJECT_DIR$/../demogen/tools.go" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/../gocloud" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/../gogui/.idea/workspace.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/config/init.go" beforeDir="false" afterPath="$PROJECT_DIR$/config/init.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/script/kubectl/kubectl.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../gotip/.idea/gotip.iml" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/../gotip/.idea/misc.xml" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/../gotip/.idea/modules.xml" beforeDir="false" />
@@ -455,15 +455,6 @@
   <component name="FileEditorManager">
     <leaf>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/script/protoc/inject.go">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="90">
-              <caret line="9" selection-start-line="9" selection-end-line="9" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/script/protoc/service.go">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="360">
@@ -490,11 +481,32 @@
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="true">
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/gen.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state>
-              <caret column="12" selection-start-column="12" selection-end-column="12" />
+            <state relative-caret-position="30">
+              <caret line="2" lean-forward="true" selection-start-line="2" selection-end-line="2" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/config/init.go">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="-77">
+              <caret line="9" column="1" selection-start-line="9" selection-start-column="1" selection-end-line="9" selection-end-column="1" />
+              <folding>
+                <element signature="e#16#143#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/.gitignore">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="15">
+              <caret line="1" column="6" selection-start-line="1" selection-start-column="6" selection-end-line="1" selection-end-column="6" />
             </state>
           </provider>
         </entry>
@@ -504,15 +516,6 @@
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="90">
               <caret line="11" column="30" selection-start-line="11" selection-start-column="30" selection-end-line="11" selection-end-column="30" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/script/docker/service.go">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-797">
-              <caret line="37" column="31" selection-start-line="37" selection-start-column="31" selection-end-line="37" selection-end-column="31" />
             </state>
           </provider>
         </entry>
@@ -596,7 +599,7 @@
   </component>
   <component name="GOROOT" path="/usr/local/Cellar/go/1.11.4/libexec" />
   <component name="Git.Settings">
-    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="GoLibraries">
     <option name="indexEntireGoPath" value="false" />
@@ -604,7 +607,6 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/script/script_test.go" />
         <option value="$PROJECT_DIR$/script/providers.go" />
         <option value="$PROJECT_DIR$/script/terraform/new_test.go" />
         <option value="$PROJECT_DIR$/pipe_test.go" />
@@ -628,7 +630,6 @@
         <option value="$PROJECT_DIR$/script/go/service.go" />
         <option value="$PROJECT_DIR$/script/make/service.go" />
         <option value="$PROJECT_DIR$/script/interface.go" />
-        <option value="$PROJECT_DIR$/config/init.go" />
         <option value="$PROJECT_DIR$/script/options.go" />
         <option value="$PROJECT_DIR$/script/command.go" />
         <option value="$PROJECT_DIR$/script/script.go" />
@@ -655,6 +656,8 @@
         <option value="$PROJECT_DIR$/script/sed/service.go" />
         <option value="$PROJECT_DIR$/script/terraform/service.go" />
         <option value="$PROJECT_DIR$/gen.go" />
+        <option value="$PROJECT_DIR$/config/init.go" />
+        <option value="$PROJECT_DIR$/.gitignore" />
       </list>
     </option>
   </component>
@@ -684,6 +687,11 @@
             <path>
               <item name="goscript" type="b2602c69:ProjectViewProjectNode" />
               <item name="goscript" type="462c0819:PsiDirectoryNode" />
+              <item name="config" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="goscript" type="b2602c69:ProjectViewProjectNode" />
+              <item name="goscript" type="462c0819:PsiDirectoryNode" />
               <item name="script" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
@@ -709,7 +717,7 @@
     <property name="last_opened_file_path" value="$USER_HOME$" />
     <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
     <property name="nodejs_npm_path_reset_for_default_project" value="true" />
-    <property name="settings.editor.selected.configurable" value="configurable.group.appearance" />
+    <property name="settings.editor.selected.configurable" value="project.propVCSSupport.Mappings" />
   </component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
@@ -767,6 +775,12 @@
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="1" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <ignored-roots>
+      <path value="$PROJECT_DIR$/.." />
+      <path value="$PROJECT_DIR$/script" />
+    </ignored-roots>
   </component>
   <component name="VgoProject">
     <integration-enabled>true</integration-enabled>
@@ -930,16 +944,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="330">
           <caret line="41" column="1" selection-start-line="41" selection-start-column="1" selection-end-line="41" selection-end-column="1" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/config/init.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="477">
-          <caret line="40" column="5" lean-forward="true" selection-start-line="18" selection-start-column="8" selection-end-line="40" selection-end-column="5" />
-          <folding>
-            <element signature="e#17#108#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -1145,8 +1149,25 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/gen.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state>
-          <caret column="12" selection-start-column="12" selection-end-column="12" />
+        <state relative-caret-position="30">
+          <caret line="2" lean-forward="true" selection-start-line="2" selection-end-line="2" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/config/init.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-77">
+          <caret line="9" column="1" selection-start-line="9" selection-start-column="1" selection-end-line="9" selection-end-column="1" />
+          <folding>
+            <element signature="e#16#143#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/.gitignore">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="15">
+          <caret line="1" column="6" selection-start-line="1" selection-start-column="6" selection-end-line="1" selection-end-column="6" />
         </state>
       </provider>
     </entry>
