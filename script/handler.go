@@ -31,7 +31,7 @@ func Chain(outer Middleware, others ...Middleware) Middleware {
 	}
 }
 
-type ScriptHandler struct {}
+type ScriptHandler struct{}
 
 func NewScriptHandler() *ScriptHandler {
 	return &ScriptHandler{}
@@ -39,12 +39,10 @@ func NewScriptHandler() *ScriptHandler {
 
 func (s *ScriptHandler) Exec(ctx context2.Context, cmd *Command) (*Output, error) {
 	e := exec.CommandContext(ctx, cmd.Name, cmd.Args...)
-	log.Print("starting command")
 	cmd.Env = os.Environ()
 	data, err := e.Output()
 	log.Println(string(data))
 	return &Output{
-		Out:                  data,
+		Out: data,
 	}, err
 }
-

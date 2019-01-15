@@ -34,7 +34,7 @@ import (
 
 var (
 	cmdName string
-	cmdDir 	string
+	cmdDir  string
 	cmdArgs []string
 )
 
@@ -69,15 +69,16 @@ to quickly create a Cobra application.`,
 		defer conn.Close()
 
 		client := script.NewScriptServiceClient(conn)
-		out, err := client.Exec(context.TODO(), &script.Command{
-			Name:                 cmdName,
-			Dir:                  cmdDir,
-			Args:                 cmdArgs,
-			Env:                  os.Environ(),
+		out, err := client.Exec(context.Background(), &script.Command{
+			Name: cmdName,
+			Dir:  cmdDir,
+			Args: cmdArgs,
+			Env:  os.Environ(),
 		})
 		if err != nil {
 			fmt.Println(string(out.Out))
 			log.Fatalln("failed to execute command", errors.WithStack(err))
 		}
+		fmt.Println(string(out.Out))
 	},
 }

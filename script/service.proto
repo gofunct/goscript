@@ -14,5 +14,5 @@ message Command {
 }
 
 message Output {
-    bytes out = 2;
+    bytes out = 1;
 }
