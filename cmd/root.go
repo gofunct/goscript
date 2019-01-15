@@ -33,7 +33,7 @@ var (
 )
 var rootCmd = &cobra.Command{
 	Use:   "goscript",
-	Short: "A brief description of your application",
+	Short: "A general purpose scripting utility for developers and administrators",
 }
 
 func Execute() {

@@ -7,7 +7,7 @@ require (
 	github.com/gogo/protobuf v1.2.0
 	github.com/golang/protobuf v1.2.0
 	github.com/google/wire v0.2.0
-	github.com/inconshreveable/mousetrap v1.0.0 // indirect
+	github.com/inconshreveable/mousetrap v1.0.0
 	github.com/jtolds/gls v4.2.1+incompatible // indirect
 	github.com/mitchellh/go-homedir v1.0.0
 	github.com/pkg/errors v0.8.1

@@ -37,7 +37,7 @@ var tmplDir string
 // replaceCmd represents the replace command
 var replaceCmd = &cobra.Command{
 	Use:         "replace",
-	Short:       "A brief description of your command",
+	Short:       "for all files with the .tmpl extension, replace the keys with the values present in the provided metadata",
 	Annotations: md,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("replace me with a walkfunc")

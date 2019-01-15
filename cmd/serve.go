@@ -22,7 +22,7 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/gofunct/goscript/script"
+	"github.com/gofunct/goscript/api"
 	"google.golang.org/grpc"
 	"log"
 	"net"
@@ -42,7 +42,7 @@ func init() {
 // serveCmd represents the serve command
 var serveCmd = &cobra.Command{
 	Use:   "serve",
-	Short: "A brief description of your command",
+	Short: "start a grpc server to handle remote script requests",
 
 	RunE: func(cmd *cobra.Command, args []string) error {
 		lis, err := net.Listen("tcp", fmt.Sprintf("localhost:%s", port))
@@ -52,7 +52,7 @@ var serveCmd = &cobra.Command{
 		var opts []grpc.ServerOption
 
 		grpcServer := grpc.NewServer(opts...)
-		script.RegisterScriptServiceServer(grpcServer, script.NewScriptHandler())
+		api.RegisterScriptServiceServer(grpcServer, api.NewScriptHandler())
 		return grpcServer.Serve(lis)
 	},
 }

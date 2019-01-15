@@ -23,7 +23,7 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"github.com/gofunct/goscript/script"
+	"github.com/gofunct/goscript/api"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"log"
@@ -36,6 +36,7 @@ var (
 	cmdName string
 	cmdDir  string
 	cmdArgs []string
+	host    string
 )
 
 func init() {
@@ -43,23 +44,17 @@ func init() {
 	execCmd.Flags().StringVarP(&cmdName, "name", "n", "", "")
 	execCmd.Flags().StringVarP(&cmdDir, "dir", "d", "", "")
 	execCmd.Flags().StringSliceVarP(&cmdArgs, "args", "a", []string{}, "")
-	execCmd.Flags().StringVarP(&port, "port", "p", "8080", "")
+	execCmd.Flags().StringVarP(&host, "host", "h", "localhost:8080", "")
 }
 
 // execCmd represents the exec command
 var execCmd = &cobra.Command{
 	Use:   "exec",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short: "execute a script on a backend grpc server",
 	Run: func(cmd *cobra.Command, args []string) {
 		// Create a insecure gRPC channel to communicate with the server.
 		conn, err := grpc.Dial(
-			"localhost:"+port,
+			host,
 			grpc.WithInsecure(),
 		)
 		if err != nil {
@@ -68,8 +63,8 @@ to quickly create a Cobra application.`,
 
 		defer conn.Close()
 
-		client := script.NewScriptServiceClient(conn)
-		out, err := client.Exec(context.Background(), &script.Command{
+		client := api.NewScriptServiceClient(conn)
+		out, err := client.Exec(context.Background(), &api.Command{
 			Name: cmdName,
 			Dir:  cmdDir,
 			Args: cmdArgs,
