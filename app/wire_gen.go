@@ -15,7 +15,6 @@ import (
 	"github.com/go-sql-driver/mysql"
 	"github.com/gofunct/goscript/runtime"
 	"github.com/gofunct/goscript/runtime/health"
-	"github.com/gofunct/goscript/runtime/router"
 	"github.com/gofunct/goscript/service"
 	"github.com/spf13/viper"
 	"go.opencensus.io/trace"
@@ -77,9 +76,9 @@ func Aws(ctx context.Context, name string, endpoint2 endpoint.Endpoint, middlewa
 		Driver:                defaultDriver,
 	}
 	serverServer := server.New(serverOptions)
-	handler := router.New(ncsaLogger)
-	serviceService := service.newService(name, endpoint2, middleware, handler)
-	runtimeService := runtime.NewService(db, bucket, serverServer, handler, serviceService)
+	v2 := service.newOptions()
+	serviceService := service.newService(name, endpoint2, middleware, v2)
+	runtimeService := runtime.NewService(db, bucket, serverServer, serviceService, ncsaLogger)
 	application := NewApplication(name, runtimeService)
 	return application, func() {
 		cleanup3()
@@ -139,9 +138,9 @@ func Gcp(ctx context.Context, name string, endpoint2 endpoint.Endpoint, middlewa
 		Driver:                defaultDriver,
 	}
 	serverServer := server.New(options)
-	handler := router.New(stackdriverLogger)
-	serviceService := service.newService(name, endpoint2, middleware, handler)
-	runtimeService := runtime.NewService(db, bucket, serverServer, handler, serviceService)
+	v2 := service.newOptions()
+	serviceService := service.newService(name, endpoint2, middleware, v2)
+	runtimeService := runtime.NewService(db, bucket, serverServer, serviceService, stackdriverLogger)
 	application := NewApplication(name, runtimeService)
 	return application, func() {
 		cleanup2()
@@ -173,9 +172,9 @@ func Local(ctx context.Context, name string, endpoint2 endpoint.Endpoint, middle
 		Driver:                defaultDriver,
 	}
 	serverServer := server.New(options)
-	handler := router.New(logger)
-	serviceService := service.newService(name, endpoint2, middleware, handler)
-	runtimeService := runtime.NewService(db, bucket, serverServer, handler, serviceService)
+	v2 := service.newOptions()
+	serviceService := service.newService(name, endpoint2, middleware, v2)
+	runtimeService := runtime.NewService(db, bucket, serverServer, serviceService, logger)
 	application := NewApplication(name, runtimeService)
 	return application, func() {
 		cleanup()
