@@ -3,7 +3,7 @@
 //go:generate wire
 //+build !wireinject
 
-package cloud
+package app
 
 import (
 	"context"
@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/client"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/go-sql-driver/mysql"
+	"github.com/spf13/viper"
 	"go.opencensus.io/trace"
 	"gocloud.dev/aws/rds"
 	"gocloud.dev/blob"
@@ -23,38 +24,37 @@ import (
 	"gocloud.dev/mysql/cloudmysql"
 	"gocloud.dev/mysql/rdsmysql"
 	"gocloud.dev/requestlog"
-	"gocloud.dev/runtimevar"
-	"gocloud.dev/runtimevar/filevar"
-	"gocloud.dev/runtimevar/paramstore"
-	"gocloud.dev/runtimevar/runtimeconfigurator"
 	"gocloud.dev/server"
 	"gocloud.dev/server/sdserver"
 	"gocloud.dev/server/xrayserver"
-	"google.golang.org/genproto/googleapis/cloud/runtimeconfig/v1beta1"
 	"net/http"
 )
 
 // Injectors from inject_aws.go:
 
-func Aws(ctx context.Context, c *Config) (*Application, func(), error) {
-	ncsaLogger := xrayserver.NewRequestLogger()
+func Aws(ctx context.Context, h http.Handler) (*Application, func(), error) {
 	client := _wireClientValue
 	certFetcher := &rds.CertFetcher{
 		Client: client,
 	}
-	params := awsSQLParams(c)
+	params := awsSQLParams()
 	db, cleanup, err := rdsmysql.Open(ctx, certFetcher, params)
 	if err != nil {
 		return nil, nil, err
 	}
-	v, cleanup2 := AppHealthChecks(db)
 	options := _wireOptionsValue
 	sessionSession, err := session.NewSessionWithOptions(options)
 	if err != nil {
-		cleanup2()
 		cleanup()
 		return nil, nil, err
 	}
+	bucket, err := awsBucket(ctx, sessionSession)
+	if err != nil {
+		cleanup()
+		return nil, nil, err
+	}
+	ncsaLogger := xrayserver.NewRequestLogger()
+	v, cleanup2 := appHealthChecks(db)
 	xRay := xrayserver.NewXRayClient(sessionSession)
 	exporter, cleanup3, err := xrayserver.NewExporter(xRay)
 	if err != nil {
@@ -72,21 +72,8 @@ func Aws(ctx context.Context, c *Config) (*Application, func(), error) {
 		Driver:                defaultDriver,
 	}
 	serverServer := server.New(serverOptions)
-	bucket, err := awsBucket(ctx, sessionSession, c)
-	if err != nil {
-		cleanup3()
-		cleanup2()
-		cleanup()
-		return nil, nil, err
-	}
-	variable, err := awsRunVar(ctx, sessionSession, c)
-	if err != nil {
-		cleanup3()
-		cleanup2()
-		cleanup()
-		return nil, nil, err
-	}
-	application := NewApplication(serverServer, db, bucket, variable)
+	appRuntime := newRuntime(db, bucket, serverServer)
+	application := NewApplication(h, appRuntime)
 	return application, func() {
 		cleanup3()
 		cleanup2()
@@ -102,8 +89,7 @@ var (
 
 // Injectors from inject_gcp.go:
 
-func Gcp(ctx context.Context, c *Config) (*Application, func(), error) {
-	stackdriverLogger := sdserver.NewRequestLogger()
+func Gcp(ctx context.Context, h http.Handler) (*Application, func(), error) {
 	roundTripper := gcp.DefaultTransport()
 	credentials, err := gcp.DefaultCredentials(ctx)
 	if err != nil {
@@ -119,12 +105,17 @@ func Gcp(ctx context.Context, c *Config) (*Application, func(), error) {
 	if err != nil {
 		return nil, nil, err
 	}
-	params := gcpSQLParams(projectID, c)
+	params := gcpSQLParams(projectID)
 	db, err := cloudmysql.Open(ctx, remoteCertSource, params)
 	if err != nil {
 		return nil, nil, err
 	}
-	v, cleanup := AppHealthChecks(db)
+	bucket, err := gcpBucket(ctx, httpClient)
+	if err != nil {
+		return nil, nil, err
+	}
+	stackdriverLogger := sdserver.NewRequestLogger()
+	v, cleanup := appHealthChecks(db)
 	monitoredresourceInterface := monitoredresource.Autodetect()
 	exporter, cleanup2, err := sdserver.NewExporter(projectID, tokenSource, monitoredresourceInterface)
 	if err != nil {
@@ -141,29 +132,9 @@ func Gcp(ctx context.Context, c *Config) (*Application, func(), error) {
 		Driver:                defaultDriver,
 	}
 	serverServer := server.New(options)
-	bucket, err := gcpBucket(ctx, c, httpClient)
-	if err != nil {
-		cleanup2()
-		cleanup()
-		return nil, nil, err
-	}
-	runtimeConfigManagerClient, cleanup3, err := runtimeconfigurator.Dial(ctx, tokenSource)
-	if err != nil {
-		cleanup2()
-		cleanup()
-		return nil, nil, err
-	}
-	variable, cleanup4, err := gcpRunVar(ctx, runtimeConfigManagerClient, projectID, c)
-	if err != nil {
-		cleanup3()
-		cleanup2()
-		cleanup()
-		return nil, nil, err
-	}
-	application := NewApplication(serverServer, db, bucket, variable)
+	appRuntime := newRuntime(db, bucket, serverServer)
+	application := NewApplication(h, appRuntime)
 	return application, func() {
-		cleanup4()
-		cleanup3()
 		cleanup2()
 		cleanup()
 	}, nil
@@ -171,13 +142,17 @@ func Gcp(ctx context.Context, c *Config) (*Application, func(), error) {
 
 // Injectors from inject_local.go:
 
-func Local(ctx context.Context, c *Config) (*Application, func(), error) {
-	logger := _wireLoggerValue
-	db, err := dialLocalSQL(c)
+func Local(ctx context.Context, h http.Handler) (*Application, func(), error) {
+	db, err := dialLocalSQL()
 	if err != nil {
 		return nil, nil, err
 	}
-	v, cleanup := AppHealthChecks(db)
+	bucket, err := localBucket()
+	if err != nil {
+		return nil, nil, err
+	}
+	logger := _wireLoggerValue
+	v, cleanup := appHealthChecks(db)
 	exporter := _wireExporterValue
 	sampler := trace.AlwaysSample()
 	defaultDriver := _wireDefaultDriverValue
@@ -189,19 +164,9 @@ func Local(ctx context.Context, c *Config) (*Application, func(), error) {
 		Driver:                defaultDriver,
 	}
 	serverServer := server.New(options)
-	bucket, err := localBucket(c)
-	if err != nil {
-		cleanup()
-		return nil, nil, err
-	}
-	variable, cleanup2, err := localRunVar(c)
-	if err != nil {
-		cleanup()
-		return nil, nil, err
-	}
-	application := NewApplication(serverServer, db, bucket, variable)
+	appRuntime := newRuntime(db, bucket, serverServer)
+	application := NewApplication(h, appRuntime)
 	return application, func() {
-		cleanup2()
 		cleanup()
 	}, nil
 }
@@ -213,97 +178,60 @@ var (
 
 // inject_aws.go:
 
-func awsBucket(ctx context.Context, cp client.ConfigProvider, c *Config) (*blob.Bucket, error) {
-	return s3blob.OpenBucket(ctx, cp, c.Bucket, nil)
+func awsBucket(ctx context.Context, cp client.ConfigProvider) (*blob.Bucket, error) {
+	return s3blob.OpenBucket(ctx, cp, viper.GetString("aws.bucket"), nil)
 }
 
 // awsSQLParams is a Wire provider function that returns the RDS SQL connection
 // parameters based on the command-line c. Other providers inside
 // awscloud.AWS use the parameters to construct a *sql.DB.
-func awsSQLParams(c *Config) *rdsmysql.Params {
+func awsSQLParams() *rdsmysql.Params {
 	return &rdsmysql.Params{
-		Endpoint: c.DbHost,
-		Database: c.DbName,
-		User:     c.DbUser,
-		Password: c.DbPassword,
+		Endpoint: viper.GetString("aws.sql.endpoint"),
+		Database: viper.GetString("aws.sql.database"),
+		User:     viper.GetString("aws.sql.user"),
+		Password: viper.GetString("aws.sql.password"),
 	}
-}
-
-// awsMOTDVar is a Wire provider function that returns the Message of the Day
-// variable from SSM Parameter Store.
-func awsRunVar(ctx context.Context, sess client.ConfigProvider, c *Config) (*runtimevar.Variable, error) {
-	return paramstore.NewVariable(sess, c.RunVar, runtimevar.StringDecoder, &paramstore.Options{
-		WaitDuration: c.RunVarWait,
-	})
 }
 
 // inject_gcp.go:
 
-func gcpBucket(ctx context.Context, c *Config, client2 *gcp.HTTPClient) (*blob.Bucket, error) {
-	return gcsblob.OpenBucket(ctx, client2, c.Bucket, nil)
+func gcpBucket(ctx context.Context, client2 *gcp.HTTPClient) (*blob.Bucket, error) {
+	return gcsblob.OpenBucket(ctx, client2, viper.GetString("gcs.bucket"), nil)
 }
 
 // gcpSQLParams is a Wire provider function that returns the Cloud SQL
 // connection parameters based on the command-line c. Other providers inside
 // gcpcloud.GCP use the parameters to construct a *sql.DB.
-func gcpSQLParams(id gcp.ProjectID, c *Config) *cloudmysql.Params {
+func gcpSQLParams(id gcp.ProjectID) *cloudmysql.Params {
 	return &cloudmysql.Params{
 		ProjectID: string(id),
-		Region:    c.SqlRegion,
-		Instance:  c.DbHost,
-		Database:  c.DbName,
-		User:      c.DbUser,
-		Password:  c.DbPassword,
+		Region:    viper.GetString("gcs.sql.region"),
+		Instance:  viper.GetString("gcs.sql.instance"),
+		Database:  viper.GetString("gcs.sql.database"),
+		User:      viper.GetString("gcs.sql.user"),
+		Password:  viper.GetString("gcs.sql.password"),
 	}
-}
-
-// gcpMOTDVar is a Wire provider function that returns the Message of the Day
-// variable from Runtime Configurator.
-func gcpRunVar(ctx context.Context, client2 runtimeconfig.RuntimeConfigManagerClient, project gcp.ProjectID, c *Config) (*runtimevar.Variable, func(), error) {
-	name := runtimeconfigurator.ResourceName{
-		ProjectID: string(project),
-		Config:    c.RunVarConfigName,
-		Variable:  c.RunVar,
-	}
-	v, err := runtimeconfigurator.NewVariable(client2, name, runtimevar.StringDecoder, &runtimeconfigurator.Options{
-		WaitDuration: c.RunVarWait,
-	})
-	if err != nil {
-		return nil, nil, err
-	}
-	return v, func() { v.Close() }, nil
 }
 
 // inject_local.go:
 
 // localBucket is a Wire provider function that returns a directory-based bucket
 // based on the command-line c.
-func localBucket(c *Config) (*blob.Bucket, error) {
-	return fileblob.OpenBucket(c.Bucket, nil)
+func localBucket() (*blob.Bucket, error) {
+	return fileblob.OpenBucket(viper.GetString("local.bucket"), nil)
 }
 
 // dialLocalSQL is a Wire provider function that connects to a MySQL database
 // (usually on localhost).
-func dialLocalSQL(c *Config) (*sql.DB, error) {
+func dialLocalSQL() (*sql.DB, error) {
 	cfg := &mysql.Config{
 		Net:                  "tcp",
-		Addr:                 c.DbHost,
-		DBName:               c.DbName,
-		User:                 c.DbUser,
-		Passwd:               c.DbPassword,
+		Addr:                 viper.GetString("local.sql.region"),
+		DBName:               viper.GetString("local.sql.name"),
+		User:                 viper.GetString("local.sql.user"),
+		Passwd:               viper.GetString("local.sql.password"),
 		AllowNativePasswords: true,
 	}
 	return sql.Open("mysql", cfg.FormatDSN())
-}
-
-// localRuntimeVar is a Wire provider function that returns the Message of the
-// Day variable based on a local file.
-func localRunVar(c *Config) (*runtimevar.Variable, func(), error) {
-	v, err := filevar.New(c.RunVar, runtimevar.StringDecoder, &filevar.Options{
-		WaitDuration: c.RunVarWait,
-	})
-	if err != nil {
-		return nil, nil, err
-	}
-	return v, func() { v.Close() }, nil
 }

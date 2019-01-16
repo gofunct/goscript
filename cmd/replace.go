@@ -21,9 +21,9 @@
 package cmd
 
 import (
-	"fmt"
 	"github.com/pkg/errors"
 	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -40,7 +40,9 @@ var replaceCmd = &cobra.Command{
 	Short:       "for all files with the .tmpl extension, replace the keys with the values present in the provided metadata",
 	Annotations: md,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("replace me with a walkfunc")
+		if err := replaceFunc(tmplDir); err != nil {
+			log.Fatalln("failed to run command", err)
+		}
 	},
 }
 
@@ -50,8 +52,8 @@ func init() {
 	replaceCmd.PersistentFlags().StringVarP(&tmplDir, "dir", "d", "", "template directory")
 }
 
-func replaceFunc() error {
-	return filepath.Walk(tmplDir, func(path string, info os.FileInfo, err error) error {
+func replaceFunc(dir string) error {
+	return filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 		// skip vendor directory
 		if info.IsDir() && info.Name() == "vendor" {
 			return filepath.SkipDir
@@ -63,7 +65,7 @@ func replaceFunc() error {
 			}
 			stringer := string(bytes)
 
-			for old, new := range replaceCmd.Annotations {
+			for old, new := range md {
 				stringer = strings.Replace(stringer, old, new, -1)
 			}
 			if err := ioutil.WriteFile(info.Name(), []byte(stringer), 0666); err != nil {

@@ -1,4 +1,4 @@
-package script
+package service
 
 import (
 	"crypto/ecdsa"
@@ -11,18 +11,18 @@ import (
 	"strings"
 )
 
-func (c *Command) HandleGrpc(grpcServer *grpc.Server) http.Handler {
+func (s *Service) HandleGrpc(grpcServer *grpc.Server) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.ProtoMajor == 2 && strings.Contains(r.Header.Get("Content-Type"), "application/grpc") {
 			grpcServer.ServeHTTP(w, r)
 		} else {
-			c.Handler.ServeHTTP(w, r)
+			s.Handler.ServeHTTP(w, r)
 		}
 	})
 }
 
 // LoadECKeyFromFile loads EC key from unencrypted PEM file.
-func (c *Command) LoadECKeyFromFile(fileName string) (*ecdsa.PrivateKey, error) {
+func (s *Service) LoadECKeyFromFile(fileName string) (*ecdsa.PrivateKey, error) {
 	privateKeyBytes, err := ioutil.ReadFile(fileName)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read signing key file: %v", err)

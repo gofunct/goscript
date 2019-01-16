@@ -22,7 +22,6 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/gofunct/goscript/cmd/aws"
 	"github.com/gofunct/goscript/cmd/gcloud"
 	"github.com/gofunct/goscript/cmd/local"
 	"github.com/gofunct/goscript/cmd/protoc"
@@ -49,7 +48,6 @@ func Execute() {
 func init() {
 	rootCmd.AddCommand(protoc.ProtocCmd)
 	rootCmd.AddCommand(gcloud.RootCmd)
-	rootCmd.AddCommand(aws.RootCmd)
 	rootCmd.AddCommand(local.RootCmd)
 
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.chronic.yaml)")

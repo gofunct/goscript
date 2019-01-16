@@ -21,8 +21,8 @@
 package protoc
 
 import (
+	"errors"
 	kitlog "github.com/go-kit/kit/log"
-	"github.com/pkg/errors"
 	"log"
 	"os"
 	"os/exec"
@@ -35,23 +35,32 @@ import (
 var ProtocCmd = &cobra.Command{
 	Use:   "protoc",
 	Short: "A brief description of your command",
+	PreRun: func(cmd *cobra.Command, args []string) {
+		if cmd.ArgsLenAtDash() == 0 {
+			log.Fatalln(errors.New("dir must not be nil"))
+		}
+	},
 	Run: func(cmd *cobra.Command, args []string) {
 		if err := Grpc(dir); err != nil {
-			log.Fatalln("failed to execute command", errors.WithStack(err))
+			log.Fatalln("failed to execute command", err)
 		}
 	},
 }
 
 func init() {
-	ProtocCmd.Flags().StringVar(&dir, "dir", "", "path to directory containing protobuf files")
+	ProtocCmd.Flags().StringVar(&dir, "dir", ".", "path to directory containing protobuf files")
 	logger := kitlog.NewJSONLogger(kitlog.NewSyncWriter(os.Stdout))
 	logger = kitlog.With(logger, "time", kitlog.DefaultTimestampUTC, "exec", kitlog.DefaultCaller, "dir", dir)
 	log.SetOutput(kitlog.NewStdlibAdapter(logger))
+
 }
 
 func Grpc(d string) error {
 
-	return filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+	return filepath.Walk(d, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			log.Fatalln(err)
+		}
 		// skip vendor directory
 		if info.IsDir() && info.Name() == "vendor" {
 			return filepath.SkipDir
