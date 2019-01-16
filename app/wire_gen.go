@@ -78,7 +78,7 @@ func Aws(ctx context.Context, name string, endpoint2 endpoint.Endpoint, middlewa
 	serverServer := server.New(serverOptions)
 	v2 := service.newOptions()
 	serviceService := service.newService(name, endpoint2, middleware, v2)
-	runtimeService := runtime.NewService(db, bucket, serverServer, serviceService, ncsaLogger)
+	runtimeService := runtime.NewService(db, bucket, serverServer, ncsaLogger, serviceService)
 	application := NewApplication(name, runtimeService)
 	return application, func() {
 		cleanup3()
@@ -140,7 +140,7 @@ func Gcp(ctx context.Context, name string, endpoint2 endpoint.Endpoint, middlewa
 	serverServer := server.New(options)
 	v2 := service.newOptions()
 	serviceService := service.newService(name, endpoint2, middleware, v2)
-	runtimeService := runtime.NewService(db, bucket, serverServer, serviceService, stackdriverLogger)
+	runtimeService := runtime.NewService(db, bucket, serverServer, stackdriverLogger, serviceService)
 	application := NewApplication(name, runtimeService)
 	return application, func() {
 		cleanup2()
@@ -174,7 +174,7 @@ func Local(ctx context.Context, name string, endpoint2 endpoint.Endpoint, middle
 	serverServer := server.New(options)
 	v2 := service.newOptions()
 	serviceService := service.newService(name, endpoint2, middleware, v2)
-	runtimeService := runtime.NewService(db, bucket, serverServer, serviceService, logger)
+	runtimeService := runtime.NewService(db, bucket, serverServer, logger, serviceService)
 	application := NewApplication(name, runtimeService)
 	return application, func() {
 		cleanup()

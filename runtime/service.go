@@ -1,11 +1,7 @@
 package runtime
 
 import (
-	"crypto/ecdsa"
-	"crypto/x509"
 	"database/sql"
-	"encoding/pem"
-	"fmt"
 	"github.com/gofunct/goscript/runtime/health"
 	"github.com/gofunct/goscript/service"
 	"github.com/google/wire"
@@ -18,7 +14,6 @@ import (
 	"gocloud.dev/requestlog"
 	"gocloud.dev/server"
 	"google.golang.org/grpc"
-	"io/ioutil"
 	"net/http"
 	"net/http/pprof"
 	"strings"
@@ -35,15 +30,15 @@ type Service struct {
 	db       *sql.DB
 	bucket   *blob.Bucket
 	srv      *server.Server
-	services *service.Service
+	services []*service.Service
 	http.Handler
-	group group.Group
+	group.Group
 }
 
 var RunGroup group.Group
 
-func NewService(db *sql.DB, bucket *blob.Bucket, srv *server.Server, services *service.Service, l requestlog.Logger) *Service {
-	s := &Service{}
+func NewService(db *sql.DB, bucket *blob.Bucket, srv *server.Server, l requestlog.Logger, s *service.Service) *Service {
+	var handl http.Handler
 	m := mux.NewRouter()
 	m.Handle("/debug/pprof/", http.HandlerFunc(pprof.Index))
 	m.Handle("/debug/pprof/cmdline", http.HandlerFunc(pprof.Cmdline))
@@ -51,38 +46,23 @@ func NewService(db *sql.DB, bucket *blob.Bucket, srv *server.Server, services *s
 	m.Handle("/debug/pprof/symbol", http.HandlerFunc(pprof.Symbol))
 	m.Handle("/debug/pprof/trace", http.HandlerFunc(pprof.Trace))
 	m.Handle("/metrics", promhttp.HandlerFor(prometheus.DefaultGatherer, promhttp.HandlerOpts{}))
-	handl := s.HandleGrpc(services.Server)
 	handl = requestlog.NewHandler(l, m)
 
-	return &Service{db: db, bucket: bucket, srv: srv, services: services, Handler: handl, group: RunGroup}
+	me := &Service{db: db, bucket: bucket, srv: srv, Handler: handl, Group: RunGroup}
+	me.services = append(me.services, s)
+	return me
 }
 
-func (s *Service) Services() *service.Service {
+func (s *Service) Services() []*service.Service {
 	return s.services
+}
+
+func (s *Service) AddService(sv *service.Service) {
+	s.services = append(s.services, sv)
 }
 
 func (a *Service) ResetServices() {
 	a.services = nil
-}
-
-// LoadECKeyFromFile loads EC key from unencrypted PEM file.
-func (s *Service) LoadECKeyFromFile(fileName string) (*ecdsa.PrivateKey, error) {
-	privateKeyBytes, err := ioutil.ReadFile(fileName)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read signing key file: %v", err)
-	}
-
-	privateKeyPEM, _ := pem.Decode(privateKeyBytes)
-	if privateKeyPEM == nil {
-		return nil, fmt.Errorf("failed to decode pem signing key file: %v", err)
-	}
-
-	privateKey, err := x509.ParseECPrivateKey(privateKeyPEM.Bytes)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse signing key file: %v", err)
-	}
-
-	return privateKey, nil
 }
 
 func (s *Service) HandleGrpc(grpcServer *grpc.Server) http.Handler {
