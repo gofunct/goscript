@@ -1,54 +1,63 @@
-package render
+package script
 
 import (
 	"fmt"
+	"github.com/Masterminds/sprig"
+	"github.com/spf13/viper"
 	"io"
 	"strings"
 	"text/template"
 	"unicode"
 )
 
-var TemplateFuncs = template.FuncMap{
-	"trim":                    strings.TrimSpace,
-	"trimRightSpace":          TrimRightSpace,
-	"trimTrailingWhitespaces": TrimRightSpace,
-	"rpad":                    Rpad,
-}
+var TemplateFuncs = funcMap()
 
-// AddTemplateFunc adds a template function that's available to Usage and Help
-// template generation.
-func AddTemplateFunc(name string, tmplFunc interface{}) {
-	TemplateFuncs[name] = tmplFunc
-}
-
-// AddTemplateFuncs adds multiple template functions that are available to Usage and
-// Help template generation.
-func AddTemplateFuncs(tmplFuncs template.FuncMap) {
-	for k, v := range tmplFuncs {
-		TemplateFuncs[k] = v
-	}
-}
-
-func TrimRightSpace(s string) string {
-	return strings.TrimRightFunc(s, unicode.IsSpace)
-}
-
-// rpad adds padding to the right of a string.
-func Rpad(s string, padding int) string {
-	tmpl := fmt.Sprintf("%%-%ds", padding)
-	return fmt.Sprintf(tmpl, s)
+var legacyFuncs = template.FuncMap{
+	"trimRightSpace":          trimRightSpace,
+	"trimTrailingWhitespaces": trimRightSpace,
+	"rpad":                    rpad,
 }
 
 // tmpl executes the given template text on data, writing the result to w.
-func Tmpl(w io.Writer, text string, data interface{}) error {
+func Compile(w io.Writer, text string, data interface{}) error {
 	t := template.New("top")
 	t.Funcs(TemplateFuncs)
 	template.Must(t.Parse(text))
 	return t.Execute(w, data)
 }
 
+func funcMap() template.FuncMap {
+	newMap := sprig.GenericFuncMap()
+	for k, v := range legacyFuncs {
+		newMap[k] = v
+	}
+	for k, v := range viper.AllSettings() {
+		newMap[k] = v
+	}
+	return newMap
+}
+
+func addTemplateFunc(name string, tmplFunc interface{}) {
+	TemplateFuncs[name] = tmplFunc
+}
+
+func addTemplateFuncs(tmplFuncs template.FuncMap) {
+	for k, v := range tmplFuncs {
+		TemplateFuncs[k] = v
+	}
+}
+
+func trimRightSpace(s string) string {
+	return strings.TrimRightFunc(s, unicode.IsSpace)
+}
+
+func rpad(s string, padding int) string {
+	tmpl := fmt.Sprintf("%%-%ds", padding)
+	return fmt.Sprintf(tmpl, s)
+}
+
 // ld compares two strings and returns the levenshtein distance between them.
-func Ld(s, t string, ignoreCase bool) int {
+func ld(s, t string, ignoreCase bool) int {
 	if ignoreCase {
 		s = strings.ToLower(s)
 		t = strings.ToLower(t)

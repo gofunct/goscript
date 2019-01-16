@@ -2,10 +2,15 @@ package script
 
 import (
 	"fmt"
-	"github.com/gofunct/goscript/render"
 )
 
 type PositionalArgs func(cmd *Command, args []string) error
+
+// SetArgs sets arguments for the command. It is set to os.Args[1:] by default, if desired, can be overridden
+// particularly useful when testing.
+func (c *Command) SetArgs(a []string) {
+	c.args = a
+}
 
 // Legacy arg validation has the following behaviour:
 // - root commands with no subcommands can take arbitrary arguments
@@ -34,9 +39,9 @@ func NoArgs(cmd *Command, args []string) error {
 
 // OnlyValidArgs returns an error if any args are not in the list of ValidArgs.
 func OnlyValidArgs(cmd *Command, args []string) error {
-	if len(cmd.ValidArgs) > 0 {
+	if len(cmd.Config.validArgs) > 0 {
 		for _, v := range args {
-			if !render.StringInSlice(v, cmd.ValidArgs) {
+			if !StringInSlice(v, cmd.Config.validArgs) {
 				return fmt.Errorf("invalid argument %q for %q%s", v, cmd.CommandPath(), cmd.findSuggestions(args[0]))
 			}
 		}
@@ -118,4 +123,17 @@ func argsMinusFirstX(args []string, x string) []string {
 		}
 	}
 	return args
+}
+
+// ArgsLenAtDash will return the length of c.Flags().Args at the moment
+// when a -- was found during args parsing.
+func (c *Command) ArgsLenAtDash() int {
+	return c.Flags().ArgsLenAtDash()
+}
+
+func (c *Command) ValidateArgs(args []string) error {
+	if c.Config.args == nil {
+		return nil
+	}
+	return c.Config.args(c, args)
 }

@@ -1,50 +1,21 @@
 package script
 
 import (
-	"github.com/gofunct/goscript/utils"
-	"strings"
+	"github.com/spf13/pflag"
 )
 
-// OnInitialize sets the passed functions to be run when each command's
-// Execute method is called.
-func OnInitialize(y ...func()) {
-	initializers = append(initializers, y...)
-}
+var initializers []func()
+var EnablePrefixMatching = false
+var EnableCommandSorting = true
+var minNamePadding = 11
+var minCommandPathPadding = 11
+var minUsagePadding = 25
 
-func stripFlags(args []string, c *Command) []string {
-	if len(args) == 0 {
-		return args
-	}
-	c.mergePersistentFlags()
+type FParseErrWhitelist pflag.ParseErrorsWhitelist
 
-	commands := []string{}
-	flags := c.Flags()
+// Sorts commands by their names.
+type commandSorterByName []*Command
 
-Loop:
-	for len(args) > 0 {
-		s := args[0]
-		args = args[1:]
-		switch {
-		case s == "--":
-			// "--" terminates the flags
-			break Loop
-		case strings.HasPrefix(s, "--") && !strings.Contains(s, "=") && !utils.HasNoOptDefVal(s[2:], flags):
-			// If '--flag arg' then
-			// delete arg from args.
-			fallthrough // (do the same as below)
-		case strings.HasPrefix(s, "-") && !strings.Contains(s, "=") && len(s) == 2 && !utils.ShortHasNoOptDefVal(s[1:], flags):
-			// If '-f arg' then
-			// delete 'arg' from args or break the loop if len(args) <= 1.
-			if len(args) <= 1 {
-				break Loop
-			} else {
-				args = args[1:]
-				continue
-			}
-		case s != "" && !strings.HasPrefix(s, "-"):
-			commands = append(commands, s)
-		}
-	}
-
-	return commands
-}
+func (c commandSorterByName) Len() int           { return len(c) }
+func (c commandSorterByName) Swap(i, j int)      { c[i], c[j] = c[j], c[i] }
+func (c commandSorterByName) Less(i, j int) bool { return c[i].Name() < c[j].Name() }

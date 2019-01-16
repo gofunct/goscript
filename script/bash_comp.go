@@ -152,21 +152,21 @@ func writeRequiredFlag(buf *bytes.Buffer, cmd *Command) {
 
 func writeRequiredNouns(buf *bytes.Buffer, cmd *Command) {
 	buf.WriteString("    must_have_one_noun=()\n")
-	sort.Sort(sort.StringSlice(cmd.ValidArgs))
-	for _, value := range cmd.ValidArgs {
+	sort.Sort(sort.StringSlice(cmd.Config.validArgs))
+	for _, value := range cmd.Config.validArgs {
 		buf.WriteString(fmt.Sprintf("    must_have_one_noun+=(%q)\n", value))
 	}
 }
 
 func writeCmdAliases(buf *bytes.Buffer, cmd *Command) {
-	if len(cmd.Aliases) == 0 {
+	if len(cmd.Config.Aliases) == 0 {
 		return
 	}
 
-	sort.Sort(sort.StringSlice(cmd.Aliases))
+	sort.Sort(sort.StringSlice(cmd.Config.Aliases))
 
 	buf.WriteString(fmt.Sprint(`    if [[ -z "${BASH_VERSION}" || "${BASH_VERSINFO[0]}" -gt 3 ]]; then`, "\n"))
-	for _, value := range cmd.Aliases {
+	for _, value := range cmd.Config.Aliases {
 		buf.WriteString(fmt.Sprintf("        command_aliases+=(%q)\n", value))
 		buf.WriteString(fmt.Sprintf("        aliashash[%q]=%q\n", value, cmd.Name()))
 	}
@@ -175,8 +175,8 @@ func writeCmdAliases(buf *bytes.Buffer, cmd *Command) {
 }
 func writeArgAliases(buf *bytes.Buffer, cmd *Command) {
 	buf.WriteString("    noun_aliases=()\n")
-	sort.Sort(sort.StringSlice(cmd.ArgAliases))
-	for _, value := range cmd.ArgAliases {
+	sort.Sort(sort.StringSlice(cmd.Config.argAliases))
+	for _, value := range cmd.Config.argAliases {
 		buf.WriteString(fmt.Sprintf("    noun_aliases+=(%q)\n", value))
 	}
 }
@@ -215,8 +215,8 @@ func gen(buf *bytes.Buffer, cmd *Command) {
 func (c *Command) GenBashCompletion(w io.Writer) error {
 	buf := new(bytes.Buffer)
 	bash.WritePreamble(buf, c.Name())
-	if len(c.BashCompletionFunction) > 0 {
-		buf.WriteString(c.BashCompletionFunction + "\n")
+	if len(c.Config.bashCompletionFunction) > 0 {
+		buf.WriteString(c.Config.bashCompletionFunction + "\n")
 	}
 	gen(buf, c)
 	bash.WritePostscript(buf, c.Name())
@@ -292,7 +292,7 @@ var preExecHookFn = preExecHook
 
 func preExecHook(c *Command) {
 	if bash.MousetrapHelpText != "" && mousetrap.StartedByExplorer() {
-		c.Print(bash.MousetrapHelpText)
+		c.Debug(bash.MousetrapHelpText)
 		time.Sleep(5 * time.Second)
 		os.Exit(1)
 	}

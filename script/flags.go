@@ -2,7 +2,11 @@ package script
 
 import (
 	"bytes"
+	"fmt"
+	"github.com/gofunct/goscript/render/bash"
+	"github.com/gofunct/goscript/utils"
 	"github.com/spf13/pflag"
+	"strings"
 )
 
 // GlobalNormalizationFunc returns the global normalization function or nil if it doesn't exist.
@@ -188,7 +192,7 @@ func (c *Command) persistentFlag(name string) (flag *pflag.Flag) {
 
 // ParseFlags parses persistent flag tree and local flags.
 func (c *Command) ParseFlags(args []string) error {
-	if c.DisableFlagParsing {
+	if c.Config.disableFlagParsing {
 		return nil
 	}
 
@@ -199,12 +203,12 @@ func (c *Command) ParseFlags(args []string) error {
 	c.mergePersistentFlags()
 
 	//do it here after merging all flags and just before parse
-	c.Flags().ParseErrorsWhitelist = pflag.ParseErrorsWhitelist(c.FParseErrWhitelist)
+	c.Flags().ParseErrorsWhitelist = pflag.ParseErrorsWhitelist(c.Config.fParseErrWhitelist)
 
 	err := c.Flags().Parse(args)
 	// Print warnings if they occurred (e.g. deprecated flag messages).
 	if c.flagErrorBuf.Len()-beforeErrorBufLen > 0 && err == nil {
-		c.Print(c.flagErrorBuf.String())
+		c.Debug(c.flagErrorBuf.String())
 	}
 
 	return err
@@ -242,4 +246,124 @@ func (c *Command) updateParentsPflags() {
 	c.VisitParents(func(parent *Command) {
 		c.parentsPflags.AddFlagSet(parent.PersistentFlags())
 	})
+}
+
+// DebugFlags used to determine which flags have been assigned to which commands
+// and which persist.
+func (c *Command) DebugFlags() {
+	c.Debug("DebugFlags called on", c.Name())
+	var debugflags func(*Command)
+
+	debugflags = func(x *Command) {
+		if x.HasFlags() || x.HasPersistentFlags() {
+			c.Debug(x.Name())
+		}
+		if x.HasFlags() {
+			x.flags.VisitAll(func(f *pflag.Flag) {
+				if x.HasPersistentFlags() && x.persistentFlag(f.Name) != nil {
+					c.Debug("  -"+f.Shorthand+",", "--"+f.Name, "["+f.DefValue+"]", "", f.Value.String(), "  [LP]")
+				} else {
+					c.Debug("  -"+f.Shorthand+",", "--"+f.Name, "["+f.DefValue+"]", "", f.Value.String(), "  [L]")
+				}
+			})
+		}
+		if x.HasPersistentFlags() {
+			x.pflags.VisitAll(func(f *pflag.Flag) {
+				if x.HasFlags() {
+					if x.flags.Lookup(f.Name) == nil {
+						c.Debug("  -"+f.Shorthand+",", "--"+f.Name, "["+f.DefValue+"]", "", f.Value.String(), "  [P]")
+					}
+				} else {
+					c.Debug("  -"+f.Shorthand+",", "--"+f.Name, "["+f.DefValue+"]", "", f.Value.String(), "  [P]")
+				}
+			})
+		}
+		c.Debug(x.flagErrorBuf.String())
+		if x.HasSubCommands() {
+			for _, y := range x.commands {
+				debugflags(y)
+			}
+		}
+	}
+
+	debugflags(c)
+}
+
+func stripFlags(args []string, c *Command) []string {
+	if len(args) == 0 {
+		return args
+	}
+	c.mergePersistentFlags()
+
+	commands := []string{}
+	flags := c.Flags()
+
+Loop:
+	for len(args) > 0 {
+		s := args[0]
+		args = args[1:]
+		switch {
+		case s == "--":
+			// "--" terminates the flags
+			break Loop
+		case strings.HasPrefix(s, "--") && !strings.Contains(s, "=") && !utils.HasNoOptDefVal(s[2:], flags):
+			// If '--flag arg' then
+			// delete arg from args.
+			fallthrough // (do the same as below)
+		case strings.HasPrefix(s, "-") && !strings.Contains(s, "=") && len(s) == 2 && !utils.ShortHasNoOptDefVal(s[1:], flags):
+			// If '-f arg' then
+			// delete 'arg' from args or break the loop if len(args) <= 1.
+			if len(args) <= 1 {
+				break Loop
+			} else {
+				args = args[1:]
+				continue
+			}
+		case s != "" && !strings.HasPrefix(s, "-"):
+			commands = append(commands, s)
+		}
+	}
+
+	return commands
+}
+
+func (c *Command) validateRequiredFlags() error {
+	flags := c.Flags()
+	missingFlagNames := []string{}
+	flags.VisitAll(func(pflag *pflag.Flag) {
+		requiredAnnotation, found := pflag.Annotations[bash.BashCompOneRequiredFlag]
+		if !found {
+			return
+		}
+		if (requiredAnnotation[0] == "true") && !pflag.Changed {
+			missingFlagNames = append(missingFlagNames, pflag.Name)
+		}
+	})
+
+	if len(missingFlagNames) > 0 {
+		return fmt.Errorf(`required flag(s) "%s" not set`, strings.Join(missingFlagNames, `", "`))
+	}
+	return nil
+}
+
+// SetFlagErrorFunc sets a function to generate an error when flag parsing
+// fails.
+func (c *Command) SetFlagErrorFunc(f func(*Command, error) error) {
+	c.flagErrorFunc = f
+}
+
+// FlagErrorFunc returns either the function set by SetFlagErrorFunc for this
+// command or a parent, or it returns a function which returns the original
+// error.
+func (c *Command) FlagErrorFunc() (f func(*Command, error) error) {
+	if c.flagErrorFunc != nil {
+		return c.flagErrorFunc
+	}
+
+	if c.HasParent() {
+		return c.parent.FlagErrorFunc()
+	}
+	return func(c *Command, err error) error {
+		return err
+	}
 }
