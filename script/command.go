@@ -6,7 +6,6 @@ import (
 	"github.com/gofunct/goscript/utils"
 	"github.com/oklog/run"
 	flag "github.com/spf13/pflag"
-	"github.com/spf13/viper"
 	"io"
 	"net/http"
 	"sort"
@@ -27,7 +26,6 @@ type Command struct {
 	PersistentPostRun         func(cmd *Command, args []string)
 	PersistentPostRunE        func(cmd *Command, args []string) error
 	group                     *run.Group
-	v                         *viper.Viper
 	commands                  []*Command
 	parent                    *Command
 	commandsMaxUseLen         int

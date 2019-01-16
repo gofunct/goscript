@@ -3,11 +3,12 @@ package script
 import (
 	"bytes"
 	"fmt"
-	"github.com/gofunct/goscript/render/bash"
 	"github.com/gofunct/goscript/utils"
 	"github.com/spf13/pflag"
 	"strings"
 )
+
+const OneRequiredFlag = "goscript_annotation_one_required_flag"
 
 // GlobalNormalizationFunc returns the global normalization function or nil if it doesn't exist.
 func (c *Command) GlobalNormalizationFunc() func(f *pflag.FlagSet, name string) pflag.NormalizedName {
@@ -327,11 +328,28 @@ Loop:
 	return commands
 }
 
+// MarkFlagRequired adds the BashCompOneRequiredFlag annotation to the named flag if it exists,
+// and causes your command to report an error if invoked without the flag.
+func (c *Command) MarkFlagRequired(name string) error {
+	return MarkFlagRequired(c.Flags(), name)
+}
+
+// MarkPersistentFlagRequired adds the BashCompOneRequiredFlag annotation to the named persistent flag if it exists,
+// and causes your command to report an error if invoked without the flag.
+func (c *Command) MarkPersistentFlagRequired(name string) error {
+	return MarkFlagRequired(c.PersistentFlags(), name)
+}
+
+// MarkFlagRequired adds the BashCompOneRequiredFlag annotation to the named flag if it exists,
+// and causes your command to report an error if invoked without the flag.
+func MarkFlagRequired(flags *pflag.FlagSet, name string) error {
+	return flags.SetAnnotation(name, OneRequiredFlag, []string{"true"})
+}
 func (c *Command) validateRequiredFlags() error {
 	flags := c.Flags()
 	missingFlagNames := []string{}
 	flags.VisitAll(func(pflag *pflag.Flag) {
-		requiredAnnotation, found := pflag.Annotations[bash.BashCompOneRequiredFlag]
+		requiredAnnotation, found := pflag.Annotations[OneRequiredFlag]
 		if !found {
 			return
 		}

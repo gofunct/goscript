@@ -6,7 +6,6 @@ type Config struct {
 	Short                      string
 	Long                       string
 	Example                    string
-	ConfigPath                 string
 	Hidden                     bool
 	Annotations                map[string]string
 	Version                    string
@@ -25,8 +24,4 @@ type Config struct {
 	suggestionsMinimumDistance int
 	traverseChildren           bool
 	fParseErrWhitelist         FParseErrWhitelist
-}
-
-func (c *Command) Initialize() {
-	c.v.AddConfigPath(c.Config.ConfigPath)
 }

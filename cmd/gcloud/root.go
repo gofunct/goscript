@@ -18,39 +18,12 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-package cmd
+package gcloud
 
 import (
-	"fmt"
-	"github.com/gofunct/goscript/cmd/aws"
-	"github.com/gofunct/goscript/cmd/gcloud"
-	"github.com/gofunct/goscript/cmd/local"
-	"github.com/gofunct/goscript/cmd/protoc"
 	"github.com/spf13/cobra"
-	"os"
 )
 
-var (
-	cfgFile string
-	goPath  = os.Getenv("GOPATH")
-)
-var rootCmd = &cobra.Command{
-	Use:   "goscript",
-	Short: "A general purpose scripting utility for developers and administrators",
-}
-
-func Execute() {
-	if err := rootCmd.Execute(); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-}
-
-func init() {
-	rootCmd.AddCommand(protoc.ProtocCmd)
-	rootCmd.AddCommand(gcloud.RootCmd)
-	rootCmd.AddCommand(aws.RootCmd)
-	rootCmd.AddCommand(local.RootCmd)
-
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.chronic.yaml)")
+var RootCmd = &cobra.Command{
+	Use: "gcloud",
 }

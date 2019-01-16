@@ -156,11 +156,6 @@ func (c *Command) ExecuteC() (cmd *Command, err error) {
 		return c.Root().ExecuteC()
 	}
 
-	// windows hook
-	if preExecHookFn != nil {
-		preExecHookFn(c)
-	}
-
 	// initialize help as the last point possible to allow for user
 	// overriding
 	c.InitDefaultHelpCmd()
