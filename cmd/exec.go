@@ -23,7 +23,7 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"github.com/gofunct/goscript/api"
+	"github.com/gofunct/goscript/api/script"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"log"
@@ -63,8 +63,8 @@ var execCmd = &cobra.Command{
 
 		defer conn.Close()
 
-		client := api.NewScriptServiceClient(conn)
-		out, err := client.Exec(context.Background(), &api.Command{
+		client := script.NewScriptServiceClient(conn)
+		out, err := client.Exec(context.Background(), &script.Command{
 			Name: cmdName,
 			Dir:  cmdDir,
 			Args: cmdArgs,

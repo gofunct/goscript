@@ -4,6 +4,7 @@ package app
 
 import (
 	"context"
+	"github.com/go-kit/kit/endpoint"
 	"github.com/google/wire"
 	"github.com/spf13/viper"
 	"gocloud.dev/blob"
@@ -11,10 +12,9 @@ import (
 	"gocloud.dev/gcp"
 	"gocloud.dev/gcp/gcpcloud"
 	"gocloud.dev/mysql/cloudmysql"
-	"net/http"
 )
 
-func Gcp(ctx context.Context, h http.Handler) (*Application, func(), error) {
+func Gcp(ctx context.Context, name string, endpoint endpoint.Endpoint, middleware endpoint.Middleware) (*Application, func(), error) {
 	// This will be filled in by Wire with providers from the provider sets in
 	// wire.Build.
 	wire.Build(

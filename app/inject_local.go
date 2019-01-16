@@ -5,6 +5,7 @@ package app
 import (
 	"context"
 	"database/sql"
+	"github.com/go-kit/kit/endpoint"
 	"github.com/go-sql-driver/mysql"
 	"github.com/google/wire"
 	"github.com/spf13/viper"
@@ -13,10 +14,9 @@ import (
 	"gocloud.dev/blob/fileblob"
 	"gocloud.dev/requestlog"
 	"gocloud.dev/server"
-	"net/http"
 )
 
-func Local(ctx context.Context, h http.Handler) (*Application, func(), error) {
+func Local(ctx context.Context, name string, endpoint endpoint.Endpoint, middleware endpoint.Middleware) (*Application, func(), error) {
 	// This will be filled in by Wire with providers from the provider sets in
 	// wire.Build.
 	wire.Build(

@@ -11,7 +11,12 @@ import (
 	"database/sql"
 	"github.com/aws/aws-sdk-go/aws/client"
 	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/go-kit/kit/endpoint"
 	"github.com/go-sql-driver/mysql"
+	"github.com/gofunct/goscript/runtime"
+	"github.com/gofunct/goscript/runtime/health"
+	"github.com/gofunct/goscript/runtime/router"
+	"github.com/gofunct/goscript/service"
 	"github.com/spf13/viper"
 	"go.opencensus.io/trace"
 	"gocloud.dev/aws/rds"
@@ -32,7 +37,7 @@ import (
 
 // Injectors from inject_aws.go:
 
-func Aws(ctx context.Context, h http.Handler) (*Application, func(), error) {
+func Aws(ctx context.Context, name string, endpoint2 endpoint.Endpoint, middleware endpoint.Middleware) (*Application, func(), error) {
 	client := _wireClientValue
 	certFetcher := &rds.CertFetcher{
 		Client: client,
@@ -54,7 +59,7 @@ func Aws(ctx context.Context, h http.Handler) (*Application, func(), error) {
 		return nil, nil, err
 	}
 	ncsaLogger := xrayserver.NewRequestLogger()
-	v, cleanup2 := appHealthChecks(db)
+	v, cleanup2 := health.New(db)
 	xRay := xrayserver.NewXRayClient(sessionSession)
 	exporter, cleanup3, err := xrayserver.NewExporter(xRay)
 	if err != nil {
@@ -72,8 +77,10 @@ func Aws(ctx context.Context, h http.Handler) (*Application, func(), error) {
 		Driver:                defaultDriver,
 	}
 	serverServer := server.New(serverOptions)
-	appRuntime := newRuntime(db, bucket, serverServer)
-	application := NewApplication(h, appRuntime)
+	handler := router.New(ncsaLogger)
+	serviceService := service.newService(name, endpoint2, middleware, handler)
+	runtimeService := runtime.NewService(db, bucket, serverServer, handler, serviceService)
+	application := NewApplication(name, runtimeService)
 	return application, func() {
 		cleanup3()
 		cleanup2()
@@ -89,7 +96,7 @@ var (
 
 // Injectors from inject_gcp.go:
 
-func Gcp(ctx context.Context, h http.Handler) (*Application, func(), error) {
+func Gcp(ctx context.Context, name string, endpoint2 endpoint.Endpoint, middleware endpoint.Middleware) (*Application, func(), error) {
 	roundTripper := gcp.DefaultTransport()
 	credentials, err := gcp.DefaultCredentials(ctx)
 	if err != nil {
@@ -115,7 +122,7 @@ func Gcp(ctx context.Context, h http.Handler) (*Application, func(), error) {
 		return nil, nil, err
 	}
 	stackdriverLogger := sdserver.NewRequestLogger()
-	v, cleanup := appHealthChecks(db)
+	v, cleanup := health.New(db)
 	monitoredresourceInterface := monitoredresource.Autodetect()
 	exporter, cleanup2, err := sdserver.NewExporter(projectID, tokenSource, monitoredresourceInterface)
 	if err != nil {
@@ -132,8 +139,10 @@ func Gcp(ctx context.Context, h http.Handler) (*Application, func(), error) {
 		Driver:                defaultDriver,
 	}
 	serverServer := server.New(options)
-	appRuntime := newRuntime(db, bucket, serverServer)
-	application := NewApplication(h, appRuntime)
+	handler := router.New(stackdriverLogger)
+	serviceService := service.newService(name, endpoint2, middleware, handler)
+	runtimeService := runtime.NewService(db, bucket, serverServer, handler, serviceService)
+	application := NewApplication(name, runtimeService)
 	return application, func() {
 		cleanup2()
 		cleanup()
@@ -142,7 +151,7 @@ func Gcp(ctx context.Context, h http.Handler) (*Application, func(), error) {
 
 // Injectors from inject_local.go:
 
-func Local(ctx context.Context, h http.Handler) (*Application, func(), error) {
+func Local(ctx context.Context, name string, endpoint2 endpoint.Endpoint, middleware endpoint.Middleware) (*Application, func(), error) {
 	db, err := dialLocalSQL()
 	if err != nil {
 		return nil, nil, err
@@ -152,7 +161,7 @@ func Local(ctx context.Context, h http.Handler) (*Application, func(), error) {
 		return nil, nil, err
 	}
 	logger := _wireLoggerValue
-	v, cleanup := appHealthChecks(db)
+	v, cleanup := health.New(db)
 	exporter := _wireExporterValue
 	sampler := trace.AlwaysSample()
 	defaultDriver := _wireDefaultDriverValue
@@ -164,8 +173,10 @@ func Local(ctx context.Context, h http.Handler) (*Application, func(), error) {
 		Driver:                defaultDriver,
 	}
 	serverServer := server.New(options)
-	appRuntime := newRuntime(db, bucket, serverServer)
-	application := NewApplication(h, appRuntime)
+	handler := router.New(logger)
+	serviceService := service.newService(name, endpoint2, middleware, handler)
+	runtimeService := runtime.NewService(db, bucket, serverServer, handler, serviceService)
+	application := NewApplication(name, runtimeService)
 	return application, func() {
 		cleanup()
 	}, nil

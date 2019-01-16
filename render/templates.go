@@ -1,4 +1,4 @@
-package app
+package render
 
 import (
 	"github.com/Masterminds/sprig"

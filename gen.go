@@ -1,5 +1,5 @@
 //go:generate wire ./...
 //go:generate go fmt ./...
-//go:generate goscript protoc --dir script
+//go:generate goscript protoc --dir api
 
 package main

@@ -31,8 +31,8 @@ import (
 
 var (
 	cfgFile string
-	goPath  = os.Getenv("GOPATH")
 )
+
 var rootCmd = &cobra.Command{
 	Use:   "goscript",
 	Short: "A general purpose scripting utility for developers and administrators",

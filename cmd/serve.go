@@ -22,7 +22,7 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/gofunct/goscript/api"
+	"github.com/gofunct/goscript/api/script"
 	"google.golang.org/grpc"
 	"log"
 	"net"
@@ -52,7 +52,7 @@ var serveCmd = &cobra.Command{
 		var opts []grpc.ServerOption
 
 		grpcServer := grpc.NewServer(opts...)
-		api.RegisterScriptServiceServer(grpcServer, api.NewScriptHandler())
+		script.RegisterScriptServiceServer(grpcServer, script.NewScriptHandler())
 		return grpcServer.Serve(lis)
 	},
 }

@@ -1,19 +1,20 @@
+//+build wireinject
+
 package app
 
 import (
 	"context"
-	"github.com/spf13/viper"
-	"net/http"
-
 	awsclient "github.com/aws/aws-sdk-go/aws/client"
+	"github.com/go-kit/kit/endpoint"
 	"github.com/google/wire"
+	"github.com/spf13/viper"
 	"gocloud.dev/aws/awscloud"
 	"gocloud.dev/blob"
 	"gocloud.dev/blob/s3blob"
 	"gocloud.dev/mysql/rdsmysql"
 )
 
-func Aws(ctx context.Context, h http.Handler) (*Application, func(), error) {
+func Aws(ctx context.Context, name string, endpoint endpoint.Endpoint, middleware endpoint.Middleware) (*Application, func(), error) {
 	wire.Build(
 		awscloud.AWS,
 		rdsmysql.Open,

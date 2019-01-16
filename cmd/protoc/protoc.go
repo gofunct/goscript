@@ -21,7 +21,6 @@
 package protoc
 
 import (
-	"errors"
 	kitlog "github.com/go-kit/kit/log"
 	"log"
 	"os"
@@ -35,11 +34,6 @@ import (
 var ProtocCmd = &cobra.Command{
 	Use:   "protoc",
 	Short: "A brief description of your command",
-	PreRun: func(cmd *cobra.Command, args []string) {
-		if cmd.ArgsLenAtDash() == 0 {
-			log.Fatalln(errors.New("dir must not be nil"))
-		}
-	},
 	Run: func(cmd *cobra.Command, args []string) {
 		if err := Grpc(dir); err != nil {
 			log.Fatalln("failed to execute command", err)
