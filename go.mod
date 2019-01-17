@@ -34,11 +34,13 @@ require (
 	github.com/prometheus/client_golang v0.9.0
 	github.com/smartystreets/goconvey v0.0.0-20181108003508-044398e4856c // indirect
 	github.com/spf13/cobra v0.0.3
+	github.com/spf13/pflag v1.0.3
 	github.com/spf13/viper v1.3.1
 	github.com/zclconf/go-cty v0.0.0-20181231001355-67e3da15e430 // indirect
 	go.opencensus.io v0.18.0
 	gocloud.dev v0.9.0
 	golang.org/x/net v0.0.0-20190110200230-915654e7eabc
+	golang.org/x/time v0.0.0-20180412165947-fbb02b2291d2
 	google.golang.org/grpc v1.17.0
 	gopkg.in/pipe.v2 v2.0.0-20140414041502-3c2ca4d52544
 )

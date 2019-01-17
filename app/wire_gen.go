@@ -76,8 +76,8 @@ func Aws(ctx context.Context, name string, endpoint2 endpoint.Endpoint, middlewa
 		Driver:                defaultDriver,
 	}
 	serverServer := server.New(serverOptions)
-	v2 := service.newOptions()
-	serviceService := service.newService(name, endpoint2, middleware, v2)
+	v2 := service.NewOptions()
+	serviceService := service.NewService(name, endpoint2, middleware, v2)
 	runtimeService := runtime.NewService(db, bucket, serverServer, ncsaLogger, serviceService)
 	application := NewApplication(name, runtimeService)
 	return application, func() {
@@ -138,8 +138,8 @@ func Gcp(ctx context.Context, name string, endpoint2 endpoint.Endpoint, middlewa
 		Driver:                defaultDriver,
 	}
 	serverServer := server.New(options)
-	v2 := service.newOptions()
-	serviceService := service.newService(name, endpoint2, middleware, v2)
+	v2 := service.NewOptions()
+	serviceService := service.NewService(name, endpoint2, middleware, v2)
 	runtimeService := runtime.NewService(db, bucket, serverServer, stackdriverLogger, serviceService)
 	application := NewApplication(name, runtimeService)
 	return application, func() {
@@ -172,8 +172,8 @@ func Local(ctx context.Context, name string, endpoint2 endpoint.Endpoint, middle
 		Driver:                defaultDriver,
 	}
 	serverServer := server.New(options)
-	v2 := service.newOptions()
-	serviceService := service.newService(name, endpoint2, middleware, v2)
+	v2 := service.NewOptions()
+	serviceService := service.NewService(name, endpoint2, middleware, v2)
 	runtimeService := runtime.NewService(db, bucket, serverServer, logger, serviceService)
 	application := NewApplication(name, runtimeService)
 	return application, func() {

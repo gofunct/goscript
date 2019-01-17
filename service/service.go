@@ -8,8 +8,8 @@ import (
 )
 
 var Set = wire.NewSet(
-	newService,
-	newOptions,
+	NewService,
+	NewOptions,
 )
 
 type Service struct {
@@ -20,7 +20,7 @@ type Service struct {
 	*grpc.Server
 }
 
-func newService(pattern string, endpoint endpoint.Endpoint, middleware endpoint.Middleware, option []grpc.ServerOption) *Service {
+func NewService(pattern string, endpoint endpoint.Endpoint, middleware endpoint.Middleware, option []grpc.ServerOption) *Service {
 	s := grpc.NewServer(option...)
 	return &Service{Pattern: pattern, Endpoint: endpoint, Middleware: middleware, Server: s}
 }
@@ -30,7 +30,7 @@ func (c *Service) Runnable() bool {
 	return c.Pattern != "" || c.Endpoint != nil || c.Server != nil
 }
 
-func newOptions() []grpc.ServerOption {
+func NewOptions() []grpc.ServerOption {
 	opts := []grpc.ServerOption{}
 	opts = append(opts, grpc.UnaryInterceptor(kitgrpc.Interceptor))
 

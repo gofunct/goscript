@@ -27,9 +27,9 @@ var Set = wire.NewSet(
 )
 
 type Service struct {
-	db       *sql.DB
-	bucket   *blob.Bucket
-	srv      *server.Server
+	db     *sql.DB
+	bucket *blob.Bucket
+	*server.Server
 	services []*service.Service
 	http.Handler
 	group.Group
@@ -48,7 +48,7 @@ func NewService(db *sql.DB, bucket *blob.Bucket, srv *server.Server, l requestlo
 	m.Handle("/metrics", promhttp.HandlerFor(prometheus.DefaultGatherer, promhttp.HandlerOpts{}))
 	handl = requestlog.NewHandler(l, m)
 
-	me := &Service{db: db, bucket: bucket, srv: srv, Handler: handl, Group: RunGroup}
+	me := &Service{db: db, bucket: bucket, Server: srv, Handler: handl, Group: RunGroup}
 	me.services = append(me.services, s)
 	return me
 }
